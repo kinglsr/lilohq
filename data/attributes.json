@@ -1,0 +1,12 @@
+[
+  "bulk_pack",
+  "power_in_hp",
+  "color",
+  "material",
+  "diameter_mm",
+  "pack_size",
+  "notes",
+  "flow_rate_lpm",
+  "hp",
+  "voltage"
+]

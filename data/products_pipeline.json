@@ -1,0 +1,127 @@
+[
+  {
+    "gsub": {
+      "field": "vendor",
+      "pattern": "[^a-zA-Z0-9]",
+      "replacement": "_",
+      "target_field": "vendor_temp",
+      "if": "ctx?.vendor != null"
+    }
+  },
+  {
+    "script": {
+      "source": "ctx._id = ctx.sku.toLowerCase() + \"-\" + ctx.vendor_temp.toLowerCase();",
+      "description": "using vendor and sku for _id to avoid deduplication",
+      "on_failure": [
+        {
+          "set": {
+            "field": "reason",
+            "value": "vendor or sku missing"
+          }
+        },
+        {
+          "set": {
+            "field": "_index",
+            "value": "products_errors"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "uppercase": {
+      "field": "region_availability",
+      "target_field": "region_availability",
+      "ignore_missing": true,
+      "ignore_failure": true
+    }
+  },
+  {
+    "uppercase": {
+      "field": "unit_of_measure",
+      "target_field": "unit_of_measure",
+      "ignore_missing": true,
+      "ignore_failure": true
+    }
+  },
+  {
+    "script": {
+      "source": "def cat_string = ctx.category; def category_split=ctx.category.splitOnToken('>'); Map cat = new HashMap(); cat.put(\"raw\", cat_string); for (int i = 0; i < category_split.length; i++) {     int j = i+1;     cat.put(\"l\"+j, category_split[i]); } ctx.category = cat;",
+      "if": "ctx?.category!='null';",
+      "ignore_failure": true,
+      "description": "create category levels"
+    }
+  },
+  {
+    "split": {
+      "field": "category.raw",
+      "separator": ">",
+      "target_field": "category.array",
+      "ignore_missing": true,
+      "if": "ctx?.category!='null';",
+      "description": "copy category.raw to an array"
+    }
+  },
+  {
+    "gsub": {
+      "field": "category.array",
+      "pattern": "[^a-zA-Z0-9]",
+      "replacement": "",
+      "target_field": "category.array",
+      "ignore_missing": true,
+      "if": "ctx?.category!='null';",
+      "description": "fix spacing cat array"
+    }
+  },
+  {
+    "gsub": {
+      "field": "category.l1",
+      "pattern": "[^a-zA-Z0-9]",
+      "replacement": "",
+      "ignore_missing": true,
+      "if": "ctx?.category!='null';",
+      "description": "fix spacing cat l1"
+    }
+  },
+  {
+    "gsub": {
+      "field": "category.l2",
+      "pattern": "[^a-zA-Z0-9]",
+      "replacement": "",
+      "ignore_missing": true,
+      "if": "ctx?.category!='null';",
+      "description": "fix spacing cat l2"
+    }
+  },
+  {
+    "gsub": {
+      "field": "category.l3",
+      "pattern": "[^a-zA-Z0-9]",
+      "replacement": "",
+      "ignore_missing": true,
+      "if": "ctx?.category!='null';",
+      "description": "fix spacing cat l3"
+    }
+  },
+  {
+    "set": {
+      "field": "_index",
+      "value": "products_errors",
+      "if": "ctx?.new_attributes !=null;",
+      "description": "if new attribute is true, write to products_error index"
+    }
+  },
+  {
+    "script": {
+      "source": "if (ctx?.attributes != null && ctx.attributes instanceof Map) {     def nestedList = [];      for (entry in ctx.attributes.entrySet()) {         nestedList.add([             'name' : entry.getKey(),             'value': entry.getValue()         ]);     }      ctx.attributes = nestedList; } ",
+      "description": "convert the attributes to nested"
+    }
+  },
+  {
+    "remove": {
+      "field": "vendor_temp",
+      "ignore_missing": true,
+      "ignore_failure": true
+    }
+  }
+]

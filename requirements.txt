@@ -1,0 +1,5 @@
+elasticsearch
+fuzzywuzzy
+python-Levenshtein
+streamlit
+python-dotenv

@@ -1,0 +1,103 @@
+{
+  "settings": {
+    "default_pipeline": "product_pipeline",
+    "analysis": {
+      "filter": {
+        "synonyms_filter": {
+          "type": "synonym_graph",
+          "synonyms_set": "product-synonyms",
+          "updateable": true,
+          "expand": true
+        }
+      },
+      "analyzer": {
+        "index_analyzer": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": ["lowercase"]
+        },
+        "search_analyzer": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": ["lowercase", "synonyms_filter"]
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "title": {
+        "type": "text",
+        "analyzer": "index_analyzer",
+        "search_analyzer": "search_analyzer",
+        "copy_to": "semantic_search"
+      },
+      "description": {
+        "type": "text",
+        "analyzer": "index_analyzer",
+        "search_analyzer": "search_analyzer",
+        "copy_to": "semantic_search"
+      },
+      "semantic_search": {
+        "type": "semantic_text",
+        "inference_id": "product-elser-model"
+      },
+      "category": {
+        "properties": {
+          "raw": {
+            "type": "keyword",
+            "fields": {
+              "text": {
+                "type": "text"
+              }
+            }
+          },
+          "array": {
+            "type": "keyword"
+          },
+          "l1": {
+            "type": "keyword"
+          },
+          "l2": {
+            "type": "keyword"
+          },
+          "l3": {
+            "type": "keyword"
+          }
+        }
+      },
+      "unit_of_measure": {
+        "type": "keyword"
+      },
+      "attributes": {
+        "type": "nested",
+        "properties": {
+          "name": {
+            "type": "keyword"
+          },
+          "value": {
+            "type": "keyword"
+          }
+        }
+      },
+      "region_availability": {
+        "type": "keyword"
+      },
+      "inventory_status": {
+        "type": "keyword"
+      },
+      "supplier_rating": {
+        "type": "float"
+      },
+      "bulk_pack_size": {
+        "type": "keyword"
+      },
+      "vendor": {
+        "type": "keyword"
+      },
+      "sku": {
+        "type": "keyword"
+      }
+    }
+  }
+}
