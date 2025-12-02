@@ -9,3 +9,5 @@ Before running the project, create an `.env` file in the project root with the f
 ES_HOST=
 ES_API_KEY=
 ```
+
+![Product Flow](data/product_flow.png)
