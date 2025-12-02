@@ -10,4 +10,4 @@ ES_HOST=
 ES_API_KEY=
 ```
 
-![Product Flow](data/product_flow.png)
+![Product Flow](docs/product_flow.png)
