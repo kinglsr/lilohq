@@ -127,7 +127,7 @@ def search_retriever(query_text):
         }
     }
     body = {
-        "size": 2,
+        "size": 30,
         "retriever": retriever,
         "aggs": {
             "attributes": {
