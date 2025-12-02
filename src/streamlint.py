@@ -121,6 +121,7 @@ def search_hybrid(query_text, filters):
 def search_retriever(query_text):
     retriever = {
         "linear": {
+            "rank_window_size": 30,
             "fields": ["title^3", "description", "category.raw^2", "semantic_search"],
             "query": query_text,
             "normalizer": "minmax",
