@@ -125,7 +125,7 @@ def search_filters(filters):
         }
     }
     body = {
-        "size": 2,
+        "size": 30,
         "query": query,
         "aggs": {
             "attributes": {
