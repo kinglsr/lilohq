@@ -115,6 +115,50 @@ def search_hybrid(query_text, filters):
     return (results, query)
 
 
+#-----------------------------
+# Filter-Only Search Function
+#-----------------------------
+def search_filters(filters):
+    query = {
+        "bool": {
+            "filter": filters
+        }
+    }
+    body = {
+        "size": 2,
+        "query": query,
+        "aggs": {
+            "attributes": {
+                "nested": {"path": "attributes"},
+                "aggs": {
+                    "by_name": {
+                        "terms": {"field": "attributes.name", "size": 3},
+                        "aggs": {
+                            "by_value": {
+                                "terms": {"field": "attributes.value", "size": 3}
+                            }
+                        },
+                    }
+                },
+            },
+            "l1": {
+                "terms": {"field": "category.l1", "size": 10},
+                "aggs": {
+                    "l2": {
+                        "terms": {"field": "category.l2", "size": 20},
+                        "aggs": {"l3": {"terms": {"field": "category.l3", "size": 30}}},
+                    }
+                },
+            },
+            "inventory_status": {"terms": {"field": "inventory_status", "size": 10}},
+        },
+    }
+
+    # print('ES Query:',body)
+    results = es.search(index=INDEX_NAME, body=body)
+    return (results, query)
+
+
 # -----------------------------
 # Retrever Search Function
 # -----------------------------
@@ -310,6 +354,11 @@ if st.session_state["query"]:
     if len(all_filters_to_apply) == 0:
         query_text = st.session_state["query"]
         res = search_retriever(query_text)
+        st.write("Search Query:", res[1])
+        # 5. Render results
+        render_search_results(res[0])
+    elif len(all_filters_to_apply) > 0 and st.session_state["query"] == "":
+        res = search_filters(all_filters_to_apply)
         st.write("Search Query:", res[1])
         # 5. Render results
         render_search_results(res[0])
