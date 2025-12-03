@@ -325,8 +325,7 @@ st.button("Search for products", on_click=execute_search_callback)
 
 # --- Main Logic Execution Block ---
 
-if st.session_state["query"]:
-
+if st.session_state["query"] or l1 != "(Any)" or l2 != "(Any)" or l3 != "(Any)" or inv_filter_selections:
     # 1. Build Base Filters from sidebar selections (l1, l2, l3, inventory)
     base_filters = []
     if l1 != "(Any)":
