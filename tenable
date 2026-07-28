@@ -1,0 +1,34 @@
+$accessKey = "YOUR_ACCESS_KEY"
+$secretKey = "YOUR_SECRET_KEY"
+
+$headers = @{
+    "X-ApiKeys" = "accessKey=$accessKey; secretKey=$secretKey"
+    "Accept" = "application/json"
+}
+
+$page = 1
+$size = 5000
+$plugins = @()
+
+do {
+    $url = "https://<YOUR_TENABLE_HOST>/plugins/plugin?page=$page&size=$size"
+
+    $response = Invoke-RestMethod -Uri $url -Headers $headers -Method Get
+
+    $plugins += $response.plugin_details
+    $page++
+}
+while ($response.plugin_details.Count -gt 0)
+
+$plugins |
+    Select-Object id,
+                  plugin_name,
+                  cve,
+                  family_name,
+                  cvss3_base_score,
+                  solution,
+                  synopsis,
+                  description,
+                  exploit_available,
+                  plugin_modification_date |
+    Export-Csv .\TenablePlugins.csv -NoTypeInformation
