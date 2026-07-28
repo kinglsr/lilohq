@@ -1,34 +1,67 @@
-$accessKey = "YOUR_ACCESS_KEY"
-$secretKey = "YOUR_SECRET_KEY"
+# Force TLS 1.2 (required for PowerShell 5.1)
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
-$headers = @{
-    "X-ApiKeys" = "accessKey=$accessKey; secretKey=$secretKey"
-    "Accept" = "application/json"
+# ===========================
+# Configuration
+# ===========================
+$BaseUrl   = "https://cloud.tenable.com"      # Change if different
+$AccessKey = "YOUR_ACCESS_KEY"
+$SecretKey = "YOUR_SECRET_KEY"
+
+$Headers = @{
+    "X-ApiKeys" = "accessKey=$AccessKey; secretKey=$SecretKey"
+    "Accept"    = "application/json"
 }
 
 $page = 1
-$size = 5000
-$plugins = @()
+$size = 10000
+$results = @()
 
 do {
-    $url = "https://<YOUR_TENABLE_HOST>/plugins/plugin?page=$page&size=$size"
 
-    $response = Invoke-RestMethod -Uri $url -Headers $headers -Method Get
+    Write-Host "Downloading page $page..."
 
-    $plugins += $response.plugin_details
+    $uri = "$BaseUrl/plugins/plugin?page=$page&size=$size"
+
+    try {
+        $response = Invoke-RestMethod `
+            -Uri $uri `
+            -Method Get `
+            -Headers $Headers `
+            -ErrorAction Stop
+    }
+    catch {
+        Write-Host "Request Failed:"
+        Write-Host $_.Exception.Message
+        break
+    }
+
+    foreach($plugin in $response.plugin_details){
+
+        $results += [PSCustomObject]@{
+            PluginID     = $plugin.id
+            PluginName   = $plugin.plugin_name
+            Family        = $plugin.family_name
+            Severity      = $plugin.risk_factor
+            CVSS3         = $plugin.cvss3_base_score
+            CVEs          = ($plugin.cve -join ";")
+            Remediation   = $plugin.solution
+            Synopsis      = $plugin.synopsis
+            Description   = $plugin.description
+            Exploitable   = $plugin.exploit_available
+            ModifiedDate  = $plugin.plugin_modification_date
+        }
+    }
+
+    $count = $response.plugin_details.Count
+    Write-Host "Retrieved $count plugins."
+
     $page++
-}
-while ($response.plugin_details.Count -gt 0)
 
-$plugins |
-    Select-Object id,
-                  plugin_name,
-                  cve,
-                  family_name,
-                  cvss3_base_score,
-                  solution,
-                  synopsis,
-                  description,
-                  exploit_available,
-                  plugin_modification_date |
-    Export-Csv .\TenablePlugins.csv -NoTypeInformation
+} while ($count -gt 0)
+
+$results | Export-Csv ".\TenablePlugins.csv" -NoTypeInformation -Encoding UTF8
+
+Write-Host ""
+Write-Host "Completed."
+Write-Host "Downloaded $($results.Count) plugins."
